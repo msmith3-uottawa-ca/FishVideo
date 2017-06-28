@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import warnings
 import os
 
-
 class Main_Interface(Frame):
     def nothing(self, x):
         pass
@@ -24,6 +23,8 @@ class Main_Interface(Frame):
             cv2.circle(self.frame, (x, y), 4, (0, 255, 0), 2)
             cv2.imshow("frame", self.frame)
 
+
+    # @profile(precision=4)
     def run(self):
         # scaling
         with warnings.catch_warnings():
@@ -38,6 +39,7 @@ class Main_Interface(Frame):
             ax.imshow(f)
             print('Select Tank Diagonal (outer)')
             scalePts = plt.ginput(n=2, timeout=0)
+            plt.clf()
             plt.close()
 
         # scaling
@@ -49,6 +51,7 @@ class Main_Interface(Frame):
             ax.imshow(f)
             print('Select First Electrode (left most)')
             first_elec_pt = plt.ginput(n=1, timeout=0)
+            plt.clf()
             plt.close()
 
         # inpainting
@@ -62,6 +65,7 @@ class Main_Interface(Frame):
             print('Zoom, right click then center click')
             print('')
             inpaintPoints = plt.ginput(n=0, timeout=0)
+            plt.clf()
             plt.close()
 
         """
@@ -137,6 +141,7 @@ class Main_Interface(Frame):
             except:
                 cv2.imshow('Frame', np.zeros(5))
                 k = cv2.waitKey(1)
+                print("Failed in Bidirectional Thresholding")
 
         cv2.destroyAllWindows()
 
@@ -152,7 +157,6 @@ class Main_Interface(Frame):
 
             fish = np.copy(img)
             fish = cv2.cvtColor(fish, cv2.COLOR_BGR2GRAY)
-
             fish = np.multiply(fish, fishMask)
             fish = cv2.blur(fish, (5, 5))
             diff = fish - bg;
@@ -177,26 +181,21 @@ class Main_Interface(Frame):
                 i = i + 1
 
             cv2.drawContours(img, contoursFish, best_iFish, (0, 255, 0), 3)
-
             tmpImgFish = np.zeros(np.shape(img)[:2])
             cv2.drawContours(tmpImgFish, contoursFish, best_iFish, 1, -1)
-            plt.imshow(tmpImgFish)
-
-
+            # plt.imshow(tmpImgFish)
             M = cv2.moments(best_cntFish)
             cx, cy = int(M['m10'] / M['m00']), int(M['m01'] / M['m00'])
             fishPosX.append(cx)
             fishPosY.append(cy)
             cv2.circle(img, (cx, cy), 5, 255, -1)
-
             cv2.imshow('', img)
-
             k = cv2.waitKey(1)
-
             if (k == 27):
                 break
 
         cv2.destroyAllWindows()
+        plt.clf()
         plt.close('all')
 
         # cm/px
@@ -210,21 +209,10 @@ class Main_Interface(Frame):
 
         t = np.arange(nFrames) / fps
 
-        track_data = {'fishX': fishPosX, 'fishY': fishPosY, 'E0_X': self.scale_size / first_elec_pt[0][0],
-                      'E0_Y': self.scale_size / first_elec_pt[0][1], 't': t * 1000, 'E0': 0, 'E1': 0, 'E2': 0,
-                      'E3': 0,
-                      'E4': 0, 'E5': 0, 'E6': 0, 'E7': 0, 'E8': 0, 'E9': 0}
+        # TODO: This is printing the data in the reverse of the order we want.
+        # Order in this list doesn't seem to matter to what's generated in the file!
+        track_data = {'fishX': fishPosX, 'fishY': fishPosY, 't': t * 1000}
         track_data = pd.DataFrame(track_data)
-
-        expt_data = pd.read_csv(self.fileName[:-4] + '.csv',
-                                names=['t', 'E0', 'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9'])
-
-        names = ['E' + str(i) for i in np.arange(10)]
-        track_data = track_data[track_data.t <= np.max(expt_data.t)]
-
-        for ix, t in enumerate(expt_data.t.values):
-            n_larger = len(track_data[track_data.t > t])
-            track_data.loc[len(track_data) - n_larger:, names] = expt_data.loc[ix, names].values
 
         track_data.to_csv(self.csv_name)
 
