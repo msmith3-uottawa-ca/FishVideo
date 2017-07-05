@@ -8,7 +8,7 @@ import numpy as np
 import cv2
 from glob import glob
 
-folder = "S:/Mark/Research/Fish Behavioural/27062017 Bernard Looming/Run4/"
+folder = "S:/Mark/Research/Fish Behavioural/30062017 Arnold Looming/Run2"
 # filename = folder + "looming.csv"
 # video = folder + '2017-06-27_15-24-13.mp4'
 filename = glob(folder + "*.csv")[0]

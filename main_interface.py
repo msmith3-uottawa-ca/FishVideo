@@ -209,12 +209,13 @@ class Main_Interface(Frame):
 
         t = np.arange(nFrames) / fps
 
-        # TODO: This is printing the data in the reverse of the order we want.
-        # Order in this list doesn't seem to matter to what's generated in the file!
         track_data = {'fishX': fishPosX, 'fishY': fishPosY, 't': t * 1000}
         track_data = pd.DataFrame(track_data, columns=['t', 'fishX', 'fishY'])
 
         track_data.to_csv(self.csv_name)
+        print "Done Processing " + self.fileName
+        exit()
+
 
     def __init__(self):
         Frame.__init__(self)
