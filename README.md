@@ -9,4 +9,4 @@
 ### opencvtest.py
 * Takes the profile file for the ImSim system as accepted by the Fish_Gui project
 (https://github.com/aaronshifman/Fish_Gui) 
-* displays resistor intensities on top of video
+* displays resistogit cor intensities on top of video

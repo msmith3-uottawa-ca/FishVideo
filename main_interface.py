@@ -24,8 +24,24 @@ class Main_Interface(Frame):
             cv2.imshow("frame", self.frame)
 
 
+
+
     # @profile(precision=4)
     def run(self):
+
+        # light
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            c = cv2.VideoCapture(self.fileName)
+            ret, f = c.read()
+            fig, ax = plt.subplots()
+            ax.imshow(f)
+            print("Select Indicator light")
+            lightPts = plt.ginput(n=2, timeout=0)
+            # cv2.rectangle(f, lightPts[0], lightPts[1], (0, 255, 0), 2)
+            plt.clf()
+            plt.close()
+
         # scaling
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -42,17 +58,17 @@ class Main_Interface(Frame):
             plt.clf()
             plt.close()
 
-        # scaling
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            c = cv2.VideoCapture(self.fileName)
-            ret, f = c.read()
-            fig, ax = plt.subplots()
-            ax.imshow(f)
-            print('Select First Electrode (left most)')
-            first_elec_pt = plt.ginput(n=1, timeout=0)
-            plt.clf()
-            plt.close()
+        # # scaling
+        # with warnings.catch_warnings():
+        #     warnings.simplefilter("ignore")
+        #     c = cv2.VideoCapture(self.fileName)
+        #     ret, f = c.read()
+        #     fig, ax = plt.subplots()
+        #     ax.imshow(f)
+        #     print('Select First Electrode (left most)')
+        #     first_elec_pt = plt.ginput(n=1, timeout=0)
+        #     plt.clf()
+        #     plt.close()
 
         # inpainting
         with warnings.catch_warnings():
@@ -147,6 +163,9 @@ class Main_Interface(Frame):
 
         k = 0
 
+        state = 0
+        pxlist = []
+
         fishPosX = []
         fishPosY = []
         c = cv2.VideoCapture(self.fileName)
@@ -154,6 +173,17 @@ class Main_Interface(Frame):
             ret, img = c.read()
             if not ret:
                 break
+
+
+            pR1 = int(min((lightPts[0][1], lightPts[1][1])))
+            pC1 = int(min((lightPts[0][0]), lightPts[1][0]))
+            pR2 = int(max((lightPts[1][1]), lightPts[0][1]))
+            pC2 = int(max((lightPts[1][0]), lightPts[0][0]))
+
+            # opencv switches row and column positions!
+            pixels = img[pR1:pR2, pC1:pC2].max()
+            pxlist.append(pixels.copy())
+
 
             fish = np.copy(img)
             fish = cv2.cvtColor(fish, cv2.COLOR_BGR2GRAY)
@@ -214,11 +244,16 @@ class Main_Interface(Frame):
 
         track_data.to_csv(self.csv_name)
         print "Done Processing " + self.fileName
+
+        np.savetxt(self.light_name, np.asarray(pxlist), delimiter=",")
+        print "Wrote Light File"
+
         exit()
 
 
     def __init__(self):
         Frame.__init__(self)
+        self.lightlocation = (0,0)
         self.master.title("Example")
         self.master.rowconfigure(5, weight=1)
         self.master.columnconfigure(5, weight=1)
@@ -247,6 +282,7 @@ class Main_Interface(Frame):
             # try:
             print 'Loading:\t' + self.fileName
             self.csv_name = ''.join(self.fileName.split(".")[:-1]) + "_track" + ".csv"
+            self.light_name = ''.join(self.fileName.split(".")[:-1]) + "_light" + ".csv"
             self.vid_name = self.fileName.split("/")[-1]
             if os.path.isfile(self.csv_name):
                 r = raw_input('Video (' + self.vid_name + ')has already been tracked: Do you want to overwrite? [y/n]')
