@@ -168,6 +168,7 @@ class Main_Interface(Frame):
 
         fishPosX = []
         fishPosY = []
+        arealist = []
         c = cv2.VideoCapture(self.fileName)
         while (1):
             ret, img = c.read()
@@ -201,6 +202,7 @@ class Main_Interface(Frame):
 
             max_areaFish = 0
             best_iFish = 0
+            best_cntFish = 0
             i = 0
             for cnt in contoursFish:
                 area = cv2.contourArea(cnt)
@@ -209,7 +211,8 @@ class Main_Interface(Frame):
                     best_cntFish = cnt
                     best_iFish = i
                 i = i + 1
-
+            arealist.append(max_areaFish)
+            # print(max_areaFish)
             cv2.drawContours(img, contoursFish, best_iFish, (0, 255, 0), 3)
             tmpImgFish = np.zeros(np.shape(img)[:2])
             cv2.drawContours(tmpImgFish, contoursFish, best_iFish, 1, -1)
@@ -239,17 +242,19 @@ class Main_Interface(Frame):
 
         t = np.arange(nFrames) / fps
 
-        track_data = {'fishX': fishPosX, 'fishY': fishPosY, 't': t * 1000}
-        track_data = pd.DataFrame(track_data, columns=['t', 'fishX', 'fishY'])
+        # blob = blob size in frame. Low blob size means no fish in frame
+        # light = indicator light max value. Used for aligning the dataset
+        track_data = {'fishX': fishPosX, 'fishY': fishPosY, 't': t * 1000,
+                      'blob': arealist, 'light': pxlist}
+        track_data = pd.DataFrame(track_data, columns=['t', 'fishX', 'fishY', 'blob', 'light'])
 
         track_data.to_csv(self.csv_name)
         print "Done Processing " + self.fileName
 
-        np.savetxt(self.light_name, np.asarray(pxlist), delimiter=",")
-        print "Wrote Light File"
+        # np.savetxt(self.light_name, np.asarray(pxlist), delimiter=",")
+        # print "Wrote Light File"
 
         exit()
-
 
     def __init__(self):
         Frame.__init__(self)
